@@ -3,11 +3,15 @@ package data;
 import helpers.SubclassFinder;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.w3c.dom.Node;
+
+import sql.SQL;
 
 /**
  * Abstract class representing the framework for questions. Questions need to be
@@ -51,6 +55,7 @@ public abstract class Question {
 		// as if it were that subtype.
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
 			try {
+				// TODO: handle checking for tag matches
 				return (Question) c.getConstructor(Node.class).newInstance(xmlNode);
 			} catch (InvocationTargetException e) {
 				if (e.getCause() instanceof SQLException) {
@@ -76,11 +81,18 @@ public abstract class Question {
 	 *           If none of the tables contained this ID.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Question loadquestion(int id) throws SQLException,
+	public static Question loadQuestion(int id) throws SQLException,
 			LoadException {
+		int qType = -1;
+		String data = null;
+		// TODO: query database for entry and retrieve results.
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
 			try {
-				return (Question) c.getConstructor(Integer.class).newInstance(id);
+				// TODO: identify question type
+				int questionType = (int) c.getMethod("getQuestionTypeId").invoke(null);
+				if (questionType == qType) {
+					return (Question) c.getConstructor(String.class).newInstance(data);
+				}
 			} catch (InvocationTargetException e) {
 				if (e.getCause() instanceof SQLException) {
 					throw (SQLException) e.getCause();
@@ -92,15 +104,24 @@ public abstract class Question {
 	}
 
 	/**
-	 * Reserves the next available question ID in the SQL table.
+	 * Gets the type ID associated with what kind of question this is. All
+	 * question types (QuestionResponse, PictureQuestion) should reserve a unique
+	 * type ID and override this method.
 	 * 
-	 * @return the reserved ID.
+	 * @return The type ID associated with this question.
 	 */
-	public static int reserveNextQuestionId() throws SQLException {
-		// TODO: Get the next ID by simply performing a Union operation on all
-		// tables containing questions (QRQuestions, MCQuestions, etc) and getting
-		// the MAX value of ID and incrementing by 1, returning that value.
-		return 0;
+	public static int getQuestionTypeId() {
+		return -1;
+	}
+
+	/**
+	 * Gets the XML type tag associated with what kind of question this is. All
+	 * question types should reserve a unique type tag and override this method.
+	 * 
+	 * @return the type tag associated with this question.
+	 */
+	public static String getQuestionTypeTag() {
+		return null;
 	}
 
 	/**
@@ -114,7 +135,7 @@ public abstract class Question {
 	 *           If the parseFromXml hits any issues.
 	 * @see data.Question#parseFromXml(Node) parseFromXml
 	 */
-	public Question(Node xmlNode) throws Exception {
+	protected Question(Node xmlNode) throws Exception {
 		parseFromXml(xmlNode);
 	}
 
@@ -124,24 +145,15 @@ public abstract class Question {
 	 * SQL table and loading in relevant data, please implement the
 	 * loadQuestionFromDB method.
 	 * 
-	 * @param id
-	 *          The ID of the question to load.
-	 * @throws Exception
+	 * @param data
+	 *          The data representing question and answers from the SQL database.
+	 * @throws LoadException
 	 *           If the loadQuestionFromDB hits any issues.
 	 * @see data.Question#loadQuestionFromDB(int) loadQuestionFromDB
 	 */
-	public Question(int id) throws Exception {
-		loadQuestionFromDB(id);
+	protected Question(String data) throws LoadException {
+		loadQuestionFromDB(data);
 	}
-
-	/**
-	 * Gets the type ID associated with what kind of question this is. All
-	 * question types (QuestionResponse, PictureQuestion) should reserve a unique
-	 * type ID.
-	 * 
-	 * @return The type ID associated with this question.
-	 */
-	public abstract int getQuestionTypeId();
 
 	/**
 	 * Generates the HTML containing the prompt portion of a Question (ex. What is
@@ -285,17 +297,17 @@ public abstract class Question {
 			SQLException;
 
 	/**
-	 * Attempts to load a question from SQL table for this type of question,
-	 * populating any relevant instance variables if an entry is successfully
-	 * found.
+	 * Attempts to load a question from its string representation for this type of
+	 * question, populating any relevant instance variables if an entry is
+	 * successfully found. No longer makes requests to the database; static loader
+	 * that calls this method will retrieve data instead.
 	 * 
-	 * @param id
-	 *          The ID of the question to look for.
+	 * @param data
+	 *          The data representing question and answers from the SQL database.
 	 * @throws LoadException
 	 *           If the requested ID cannot be found in the given table.
 	 * @throws SQLException
 	 *           If the SQL operations fail.
 	 */
-	protected abstract void loadQuestionFromDB(int id) throws LoadException,
-			SQLException;
+	protected abstract void loadQuestionFromDB(String data) throws LoadException;
 }
