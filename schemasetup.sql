@@ -93,7 +93,7 @@ CREATE TABLE Questions (
   QuestionType INT NOT NULL,
   -- The index of the question in the quiz.
   QuestionNumber INT NOT NULL,
-  -- The text of the question, up to 1000 characters.
+  -- The data of the question, up to 4000 characters.
   Question VARCHAR(4000)
 );
 
