@@ -13,17 +13,10 @@ DROP TABLE IF EXISTS Notes;
 DROP TABLE IF EXISTS PendingChallenges;
 DROP TABLE IF EXISTS PendingFriendRequests;
 DROP TABLE IF EXISTS Friends;
-DROP TABLE IF EXISTS QuizQuestions;
+DROP TABLE IF EXISTS Questions;
 DROP TABLE IF EXISTS Quizzes;
 DROP TABLE IF EXISTS Accounts;
 DROP TABLE IF EXISTS Categories;
-DROP TABLE IF EXISTS QRQuestions;
-DROP TABLE IF EXISTS TextAnswers;
-DROP TABLE IF EXISTS MCQuestions;
-DROP TABLE IF EXISTS MCAnswers;
-DROP TABLE IF EXISTS PRQuestions;
-DROP TABLE IF EXISTS MatchingQuestions;
-DROP TABLE IF EXISTS MatchingAnswers;
 
 -- Create fresh tables
 
@@ -36,86 +29,6 @@ DROP TABLE IF EXISTS MatchingAnswers;
 -- exists people with location Stanford if location column foreign keys. Thus, you must delete all
 -- people with location Stanford (or set the location elsewhere) before obliterating Stanford in your
 -- table of locations. ORDER OF EDITS MATTER!
-
--- >>>> Quiz Question Tables Section Start
-
--- Represents all Question Response, Multi Response, and Fill In Blank questions.
--- Question for QR, MR is straightforward: simply the question text.
--- Question for Fill In Blank simply contains the _______ portion in the question text
--- and the corresponding answer in an answer table.
-CREATE TABLE QRQuestions (
-	-- The ID of the question (should be unique across all question tables).
-	ID INT NOT NULL PRIMARY KEY,
-	-- The text of the question, up to 1000 characters.
-	Question VARCHAR(1000),
-	-- Whether or not the order of the responses matter if this is a question with multiple answers.
-	OrderMatters BOOLEAN
-);
-
--- Represents all answers for Question Response, Multi Response, Fill in the Blank, and
--- Image Questions.
-CREATE TABLE TextAnswers (
-	-- The ID of the owning question.
-	QuestionID INT NOT NULL,
-	-- The index of the answer (for when order matters), 0 indexed: this is relevant in
-	-- MultiResponse questions. MultiResponse questions can also have multiple TextAnswers
-	-- that have the SAME AnswerNumber! This means that for the Nth answer, ANY of these
-	-- TextAnswers are acceptable, but only one. For all other questions, please index
-	-- this field properly even though it doesn't have any use(single answer questions still
-	-- should set this field to 0 for ALL acceptable answers).
-	AnswerNumber INT,
-	-- The actual text of the answer.
-	Answer VARCHAR(1000) NOT NULL
-);
-
--- Represents all Multiple Choice and Multiselect Multiple Choice questions.
--- Simply holds the text of the question.
-CREATE TABLE MCQuestions (
-	-- The ID of the question (should be unique across all question tables).
-	ID INT NOT NULL PRIMARY KEY,
-	-- The text of the question, up to 1000 characters.
-	Question VARCHAR(1000)
-);
-
--- Represents the answers for Multiple Choice and MMC questions.
--- For MC, each question can have many MCAnswers but only one ought to be set to
--- correct. For MMC, each question can have many MCAnswers and any quantity can
--- be correct.
-CREATE TABLE MCAnswers (
-	-- The ID of the question (should be unique across all question tables).
-	QuestionID INT NOT NULL,
-	-- The text of the answer.
-	Answer VARCHAR(1000) NOT NULL,
-	-- Whether this particular answer is correct or not.
-	Correct BOOLEAN
-);
-
--- Represents the questions for Picture Response questions.
-CREATE TABLE PRQuestions (
-	-- The ID of the question (should be unique across all question tables).
-	ID INT NOT NULL PRIMARY KEY,
-	-- The URL of the image to show (capped at 255 characters).
-	ImageSrc VARCHAR(255)
-);
-
--- Represents the questions for Matching Question questions.
-CREATE TABLE MatchingQuestions (
-	-- The ID of the question (should be unique across all question tables).
-	ID INT NOT NULL PRIMARY KEY
-);
-
--- Represents the answers for Matching Question questions. MatchingQuestions
--- questions will have one to multiple MatchingAnswers (one is a pretty boring
--- matching question: implies one leftside and one rightside and that they obviously
--- match).
-CREATE TABLE MatchingAnswers (
-	-- The ID of the question (should be unique across all question tables).
-	QuestionID INT NOT NULL,
-	-- The leftside text of one possible match in a matching question.
-	Match1 VARCHAR(1000),
-	-- The corresponding rightside text of this specific match in a matching question.
-	Match2 VARCHAR(1000)
-);
 
 -- >>>> Other Entity Tables Section Start
 
@@ -169,18 +82,19 @@ CREATE TABLE Quizzes (
 	AllowPractice BOOLEAN
 );
 
--- Represents the relationship between quizzes and questions. For each quiz, for each question in it,
--- there will exist an entry in this table.
-CREATE TABLE QuizQuestions (
-	-- The ID of the quiz.
-	QuizID INT NOT NULL,
-	FOREIGN KEY (QuizID) REFERENCES Quizzes(ID),
-	-- The ID of the question that belongs in the quiz
-	QuestionID INT NOT NULL,
-	-- The type of question this question is (Enumerated, see getQuestionTypeId)
-	QuestionType INT NOT NULL,
-	-- The index of this question in its quiz, 0 indexed
-	QuestionNumber INT NOT NULL
+-- Represents questions and holding quizzes. Contains data that should be parsed to generate actual question contents.
+CREATE TABLE Questions (
+  -- The ID of the question
+  ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  -- The ID of the question that belongs in the quiz
+  QuizID INT NOT NULL,
+  FOREIGN KEY (QuizID) REFERENCES Quizzes(ID),
+  -- The type of question. 
+  QuestionType INT NOT NULL,
+  -- The index of the question in the quiz.
+  QuestionNumber INT NOT NULL,
+  -- The text of the question, up to 1000 characters.
+  Question VARCHAR(4000)
 );
 
 -- Represents friend relationships. Hold 2 entries for each friend relationship for convenience.
