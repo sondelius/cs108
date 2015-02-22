@@ -1,6 +1,7 @@
 package sql;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
@@ -27,7 +28,17 @@ public class SQL {
 	 *           If errors occur opening a connection to the SQL server.
 	 */
 	public static void init() throws SQLException {
-		// TODO: Set conn by opening a connection.
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// Connect to the server and specify which database to use
+		conn = DriverManager.getConnection("jdbc:mysql://"
+				+ MyDBInfo.MYSQL_DATABASE_SERVER, MyDBInfo.MYSQL_USERNAME,
+				MyDBInfo.MYSQL_PASSWORD);
+		Statement stmt = conn.createStatement();
+		stmt.executeQuery("USE " + MyDBInfo.MYSQL_DATABASE_NAME);
 	}
 
 	/**
@@ -38,7 +49,7 @@ public class SQL {
 	 *           If errors occur closing a connection to the SQL server.
 	 */
 	public static void cleanup() throws SQLException {
-		// TODO: close conn.
+		conn.close();
 	}
 
 	/**
@@ -49,10 +60,12 @@ public class SQL {
 	 *           If errors occur creating a Statement object.
 	 */
 	public static Statement getStatement() throws SQLException {
-		// TODO: Use the connection to the SQL server and create a Statement to
-		// return. The created Statement can be used by other classes to execute
-		// queries.
-		return null;
+		// If the connection is not valid, re-initiate the connection.
+		if (!conn.isValid(10)) {
+			cleanup();
+			init();
+		}
+		return conn.createStatement();
 	}
 
 	/**
