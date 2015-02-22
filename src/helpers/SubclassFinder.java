@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class SubclassFinder {
 	@SuppressWarnings("rawtypes")
 	/**
-	 * Searches through a given class's package and finds all immediate subclasses of the
+	 * Searches through a given class's package and finds all subclasses of the
 	 * given class.
 	 * @param c A class defined in this project.
 	 * @return The list of subclasses of that class, in the same package of the provided class.
@@ -31,9 +31,16 @@ public class SubclassFinder {
 					try {
 						Class potentialSubclass = Class.forName(c.getPackage().getName()
 								+ "." + file.substring(0, file.length() - ".class".length()));
-						if (!c.equals(potentialSubclass)
-								&& c.equals(potentialSubclass.getGenericSuperclass())) {
-							results.add(potentialSubclass);
+						if (!c.equals(potentialSubclass)) {
+							Class superclass = potentialSubclass.getSuperclass();
+							while (superclass != null) {
+								if (superclass.equals(c)) {
+									results.add(potentialSubclass);
+									break;
+								} else {
+									superclass = superclass.getSuperclass();
+								}
+							}
 						}
 					} catch (Exception ignored) {
 					}

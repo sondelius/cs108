@@ -8,17 +8,17 @@ import org.junit.Test;
 
 public class SubclassFinderTest {
 	// A simple class hierarchy to test against
-	
+
 	private static class MyBaseClass {
 	}
 
 	private static class MySubClass1 extends MyBaseClass {
 	}
 
-	private static class MySubClass2 extends MyBaseClass {
+	private static class MySubClass2 extends MySubClass1 {
 	}
 
-	private static class MySubClass3 extends MyBaseClass {
+	private static class MySubClass3 extends MySubClass2 {
 	}
 
 	/**
