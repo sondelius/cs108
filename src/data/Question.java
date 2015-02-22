@@ -2,6 +2,7 @@ package data;
 
 import helpers.SubclassFinder;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,6 +34,14 @@ public abstract class Question {
 	 */
 	public static class LoadException extends Exception {
 		private static final long serialVersionUID = 1L;
+
+		public LoadException() {
+			super();
+		}
+
+		public LoadException(String s) {
+			super(s);
+		}
 	}
 
 	/**
@@ -55,8 +64,12 @@ public abstract class Question {
 		// as if it were that subtype.
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
 			try {
-				// TODO: handle checking for tag matches
-				return (Question) c.getConstructor(Node.class).newInstance(xmlNode);
+				if (xmlNode.getNodeName().equals(
+						c.getMethod("getQuestionTypeTag").invoke(null))) {
+					Constructor[] ct = c.getConstructors();
+					Question q = (Question) ct[0].newInstance(xmlNode);
+					return q;
+				}
 			} catch (InvocationTargetException e) {
 				if (e.getCause() instanceof SQLException) {
 					throw (SQLException) e.getCause();
@@ -83,12 +96,17 @@ public abstract class Question {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Question loadQuestion(int id) throws SQLException,
 			LoadException {
-		int qType = -1;
-		String data = null;
-		// TODO: query database for entry and retrieve results.
+		Statement s = SQL.getStatement();
+		ResultSet rs = s.executeQuery("SELECT * FROM Questions WHERE ID = " + id
+				+ " LIMIT 1;");
+		if (!rs.next()) {
+			throw new LoadException("Unable to find question with given ID [" + id
+					+ "].");
+		}
+		int qType = rs.getInt("ID");
+		String data = rs.getString("QuestionType");
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
 			try {
-				// TODO: identify question type
 				int questionType = (int) c.getMethod("getQuestionTypeId").invoke(null);
 				if (questionType == qType) {
 					return (Question) c.getConstructor(String.class).newInstance(data);
@@ -135,7 +153,7 @@ public abstract class Question {
 	 *           If the parseFromXml hits any issues.
 	 * @see data.Question#parseFromXml(Node) parseFromXml
 	 */
-	protected Question(Node xmlNode) throws Exception {
+	public Question(Node xmlNode) throws Exception {
 		parseFromXml(xmlNode);
 	}
 
@@ -151,7 +169,7 @@ public abstract class Question {
 	 *           If the loadQuestionFromDB hits any issues.
 	 * @see data.Question#loadQuestionFromDB(int) loadQuestionFromDB
 	 */
-	protected Question(String data) throws LoadException {
+	public Question(String data) throws LoadException {
 		loadQuestionFromDB(data);
 	}
 
