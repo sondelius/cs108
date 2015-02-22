@@ -66,7 +66,9 @@ public abstract class Question {
 			try {
 				if (xmlNode.getNodeName().equals(
 						c.getMethod("getQuestionTypeTag").invoke(null))) {
-					return (Question) c.getConstructor(Node.class).newInstance(xmlNode);
+					Question result = (Question) c.getConstructor().newInstance();
+					result.parseFromXml(xmlNode);
+					return result;
 				}
 			} catch (InvocationTargetException e) {
 				if (e.getCause() instanceof SQLException) {
@@ -107,7 +109,9 @@ public abstract class Question {
 			try {
 				int questionType = (int) c.getMethod("getQuestionTypeId").invoke(null);
 				if (questionType == qType) {
-					return (Question) c.getConstructor(String.class).newInstance(data);
+					Question result = (Question) c.getConstructor().newInstance();
+					result.loadQuestionFromDB(data);
+					return result;
 				}
 			} catch (InvocationTargetException e) {
 				if (e.getCause() instanceof SQLException) {
@@ -138,43 +142,6 @@ public abstract class Question {
 	 */
 	public static String getQuestionTypeTag() {
 		return null;
-	}
-
-	/**
-	 * Generic constructor for Question objects when parsing them from XML. This
-	 * should not be modified. To specify the specific behavior of parsing a
-	 * specialized question, please implement the parseFromXml method. In any
-	 * subclass, please call BOTH superconstructors of this class from within its
-	 * own constructor and do nothing else (handle parsing from within
-	 * loadQuestionFromDB and parseFromXML).
-	 * 
-	 * @param xmlNode
-	 *          The node containing the question data from the XML document.
-	 * @throws Exception
-	 *           If the parseFromXml hits any issues.
-	 * @see data.Question#parseFromXml(Node) parseFromXml
-	 */
-	public Question(Node xmlNode) throws Exception {
-		parseFromXml(xmlNode);
-	}
-
-	/**
-	 * Generic constructor for loading Question objects from the SQL database.
-	 * This should not be modified. To specify the specific behavior of reading an
-	 * SQL table and loading in relevant data, please implement the
-	 * loadQuestionFromDB method.In any subclass, please call BOTH
-	 * superconstructors of this class from within its own constructor and do
-	 * nothing else (handle parsing from within loadQuestionFromDB and
-	 * parseFromXML).
-	 * 
-	 * @param data
-	 *          The data representing question and answers from the SQL database.
-	 * @throws LoadException
-	 *           If the loadQuestionFromDB hits any issues.
-	 * @see data.Question#loadQuestionFromDB(int) loadQuestionFromDB
-	 */
-	public Question(String data) throws LoadException {
-		loadQuestionFromDB(data);
 	}
 
 	/**

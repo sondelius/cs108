@@ -36,14 +36,6 @@ public class QuestionTest {
 		private boolean xmlCalled;
 		private boolean loadCalled;
 
-		public DummyQuestion(Node xmlNode) throws Exception {
-			super(xmlNode);
-		}
-
-		public DummyQuestion(String data) throws Exception {
-			super(data);
-		}
-
 		public static int getQuestionTypeId() {
 			return 9999;
 		}
