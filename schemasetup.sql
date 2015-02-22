@@ -73,13 +73,13 @@ CREATE TABLE Quizzes (
 	CategoryID INT NOT NULL,
 	FOREIGN KEY (CategoryID) REFERENCES Categories(ID),
 	-- Whether or not to display the questions in random order.
-	RandomOrder BOOLEAN,
+	RandomOrder BOOLEAN DEFAULT FALSE NOT NULL,
 	-- Whether or not to singledisplay questions or multidisplay questions.
-	MultiPage BOOLEAN,
+	MultiPage BOOLEAN DEFAULT FALSE NOT NULL,
 	-- Whether or not to allow for immediate display of correct answers.
-	ImmediateCorrection BOOLEAN,
+	ImmediateCorrection BOOLEAN DEFAULT FALSE NOT NULL,
 	-- Whether or not to allow practice mode takes.
-	AllowPractice BOOLEAN
+	AllowPractice BOOLEAN DEFAULT FALSE NOT NULL
 );
 
 -- Represents questions and holding quizzes. Contains data that should be parsed to generate actual question contents.
