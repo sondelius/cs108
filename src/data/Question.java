@@ -143,7 +143,10 @@ public abstract class Question {
 	/**
 	 * Generic constructor for Question objects when parsing them from XML. This
 	 * should not be modified. To specify the specific behavior of parsing a
-	 * specialized question, please implement the parseFromXml method.
+	 * specialized question, please implement the parseFromXml method. In any
+	 * subclass, please call BOTH superconstructors of this class from within its
+	 * own constructor and do nothing else (handle parsing from within
+	 * loadQuestionFromDB and parseFromXML).
 	 * 
 	 * @param xmlNode
 	 *          The node containing the question data from the XML document.
@@ -159,7 +162,10 @@ public abstract class Question {
 	 * Generic constructor for loading Question objects from the SQL database.
 	 * This should not be modified. To specify the specific behavior of reading an
 	 * SQL table and loading in relevant data, please implement the
-	 * loadQuestionFromDB method.
+	 * loadQuestionFromDB method.In any subclass, please call BOTH
+	 * superconstructors of this class from within its own constructor and do
+	 * nothing else (handle parsing from within loadQuestionFromDB and
+	 * parseFromXML).
 	 * 
 	 * @param data
 	 *          The data representing question and answers from the SQL database.
