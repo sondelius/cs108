@@ -95,14 +95,14 @@ public class Account {
 	private String username;
 
 	/**
-	 * Private constructor to initialize the ID of the account.
+	 * Protected constructor to initialize the ID of the account.
 	 * 
 	 * @param id
 	 *          the ID of the account.
 	 * @param username
 	 *          the username of the account.
 	 */
-	private Account(int id, String username) {
+	protected Account(int id, String username) {
 		this.id = id;
 		this.username = username;
 	}
