@@ -68,7 +68,7 @@ CREATE TABLE Quizzes (
 	CreatorID INT NOT NULL,
 	FOREIGN KEY (CreatorID) REFERENCES Accounts(ID),
 	-- The time the quiz was created
-	TimeCreated DATE,
+	TimeCreated DATETIME,
 	-- The category of the quiz. MUST HAVE A CORRESPONDING CATEGORY (it can be the ID of "None").
 	CategoryID INT NOT NULL,
 	FOREIGN KEY (CategoryID) REFERENCES Categories(ID),
@@ -122,7 +122,7 @@ CREATE TABLE PendingFriendRequests (
 	ReceiverID INT NOT NULL,
 	FOREIGN KEY (ReceiverID) REFERENCES Accounts(ID),
 	-- The date of when the request was made.
-	SentTime DATE
+	SentTime DATETIME
 );
 
 -- Represents all pending quiz challenges. Remove when a user accepts or declines the challenge.
@@ -134,7 +134,7 @@ CREATE TABLE PendingChallenges (
 	ReceiverID INT NOT NULL,
 	FOREIGN KEY (ReceiverID) REFERENCES Accounts(ID),
 	-- The date of when the request was made.
-	SentTime DATE,
+	SentTime DATETIME,
 	-- The ID of the quiz being sent as a challenge.
 	QuizID INT NOT NULL,
 	FOREIGN KEY (QuizID) REFERENCES Quizzes(ID)
@@ -152,7 +152,7 @@ CREATE TABLE Notes (
 	ReceiverID INT NOT NULL,
 	FOREIGN KEY (ReceiverID) REFERENCES Accounts(ID),
 	-- The date of when the request was made.
-	SentTime DATE,
+	SentTime DATETIME,
 	-- The text contents of the actual note.
 	Note VARCHAR(2000),
 	-- Whether or not the note has been seen. All created notes are defaulted to not seen and thus
@@ -171,7 +171,7 @@ CREATE TABLE HistoryEntries (
 	-- The score of the test take.
 	Score INTEGER,
 	-- When the test was taken.
-	TimeBegun DATE,
+	TimeBegun DATETIME,
 	-- How long it took to take the test.
 	TimeTaken TIME
 );
