@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class SubclassFinder {
 	@SuppressWarnings("rawtypes")
 	/**
-	 * Searches through a given class's package and finds all subclasses of the
+	 * Searches through a given class's package and finds all immediate subclasses of the
 	 * given class.
 	 * @param c A class defined in this project.
 	 * @return The list of subclasses of that class, in the same package of the provided class.
