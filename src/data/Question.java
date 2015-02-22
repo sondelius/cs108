@@ -66,9 +66,7 @@ public abstract class Question {
 			try {
 				if (xmlNode.getNodeName().equals(
 						c.getMethod("getQuestionTypeTag").invoke(null))) {
-					Constructor[] ct = c.getConstructors();
-					Question q = (Question) ct[0].newInstance(xmlNode);
-					return q;
+					return (Question) c.getConstructor(Node.class).newInstance(xmlNode);
 				}
 			} catch (InvocationTargetException e) {
 				if (e.getCause() instanceof SQLException) {
@@ -103,7 +101,7 @@ public abstract class Question {
 			throw new LoadException("Unable to find question with given ID [" + id
 					+ "].");
 		}
-		int qType = rs.getInt("ID");
+		int qType = rs.getInt("QuestionType");
 		String data = rs.getString("QuestionType");
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
 			try {
