@@ -30,6 +30,7 @@ public class SQLTest {
 			assertEquals(message2, message1.equals("Hello World!") ? "Hi there."
 					: "Hello World!");
 			s.executeUpdate("DROP TABLE IF EXISTS TestTable;");
+			s.close();
 			SQL.cleanup();
 		} catch (Exception e) {
 			fail("Unexpected error: " + e.getMessage());

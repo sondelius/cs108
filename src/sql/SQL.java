@@ -69,21 +69,21 @@ public class SQL {
 	}
 
 	/**
-	 * Converts a Java Date into a string representation of an MySQL DATE.
+	 * Converts a Java Date into a string representation of an MySQL DATETIME.
 	 * 
 	 * @param d
 	 *          The date to convert.
-	 * @return The string representation of a MySQL DATE.
+	 * @return The string representation of a MySQL DATETIME.
 	 */
 	public static String convertDateToSQLDate(Date d) {
-		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
+		return "'" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d) + "'";
 	}
 
 	/**
-	 * Converts a MySQL DATE string to a Java Date.
+	 * Converts a MySQL DATETIME string to a Java Date.
 	 * 
 	 * @param sqlDate
-	 *          The string representation of a MySQL DATE.
+	 *          The string representation of a MySQL DATETIME.
 	 * @return A Java Date representation of that date.
 	 */
 	public static Date convertSQLDateToDate(String sqlDate) {
@@ -117,6 +117,6 @@ public class SQL {
 	 * @return The string representation of a MySQL TIME.
 	 */
 	public static String convertDateToSQLTime(Date d) {
-		return new SimpleDateFormat("HH:mm:ss").format(d);
+		return "'" + new SimpleDateFormat("HH:mm:ss").format(d) + "'";
 	}
 }
