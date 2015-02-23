@@ -103,6 +103,27 @@ public abstract class Question {
 			throw new LoadException("Unable to find question with given ID [" + id
 					+ "].");
 		}
+		return loadQuestionFromSQLRow(rs);
+	}
+
+	/**
+	 * Static method that, given a row from an active ResultSet, tries to look it
+	 * up as all types of questions and invokes the constructor of the appropriate
+	 * subtype of question.
+	 * 
+	 * @param rs
+	 *          The ResultSet, with the cursor in the position of the entry to be
+	 *          processed, to get values from. Please ensure that ResultSet.next()
+	 *          is called before invoking this method, since this method does not
+	 *          invoke ResultSet.next().
+	 * @return The parsed Question.
+	 * @throws SQLException
+	 *           If the SQL operations fail.
+	 * @throws LoadException
+	 *           If none of the tables contained this ID.
+	 */
+	public static Question loadQuestionFromSQLRow(ResultSet rs)
+			throws SQLException, LoadException {
 		int qType = rs.getInt("QuestionType");
 		String data = rs.getString("QuestionType");
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
