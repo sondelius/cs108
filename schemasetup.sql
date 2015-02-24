@@ -169,7 +169,7 @@ CREATE TABLE HistoryEntries (
 	QuizID INT NOT NULL,
 	FOREIGN KEY (QuizID) REFERENCES Quizzes(ID),
 	-- The score of the test take.
-	Score INTEGER,
+	Score INT,
 	-- When the test was taken.
 	TimeBegun DATETIME,
 	-- How long it took to take the test.

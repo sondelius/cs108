@@ -1,10 +1,15 @@
 package data;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
+
+import sql.SQL;
 
 /**
  * Represents a single attempt to take a quiz. Has no database counterpart, but
@@ -38,6 +43,9 @@ public class QuizSession {
 	// Represents when the quiz was started.
 	private Date timeStarted;
 
+	// Random ordering if quiz supports random ordering.
+	private int[] randomOrdering;
+
 	/**
 	 * Constructor for a new QuizSession. Should be constructed whenever a user
 	 * wants to take a quiz.
@@ -49,10 +57,32 @@ public class QuizSession {
 	 * @param forScore
 	 *          Whether or not this run is for a score (if not, then it is a
 	 *          practice test).
+	 * @throws SQLException
+	 *           If the SQL operations fail.
 	 */
-	public QuizSession(Account acc, Quiz quiz, boolean forScore) {
-		// TODO: set instance variables and create new responseParams; set
-		// timeStarted to the current time using new Date()
+	public QuizSession(Account acc, Quiz quiz, boolean forScore)
+			throws SQLException {
+		this.acc = acc;
+		this.quiz = quiz;
+		if (quiz.isRandomOrder()) {
+			randomOrdering = new int[quiz.getTotalQuestions()];
+			for (int i = 0; i < randomOrdering.length; i++) {
+				randomOrdering[i] = i;
+			}
+			// Shuffle randomOrdering using StackOverflow solution
+			Random r = new Random();
+			for (int i = randomOrdering.length - 1; i > 0; i--) {
+				int index = r.nextInt(i + 1);
+				// Simple swap
+				int a = randomOrdering[index];
+				randomOrdering[index] = randomOrdering[i];
+				randomOrdering[i] = a;
+			}
+		}
+		this.forScore = forScore;
+		responseParams = new HashMap<String, String>();
+		lastSeenQuestionIndex = -1;
+		timeStarted = new Date();
 	}
 
 	/**
@@ -64,9 +94,7 @@ public class QuizSession {
 	 * @return The value of the parameter if any, or null.
 	 */
 	public String getResponseParam(String paramName) {
-		// TODO: check the responseParams to see whether a given key exists, then
-		// return the value if it exists or null if it doesn't exist.
-		return null;
+		return responseParams.get(paramName);
 	}
 
 	/**
@@ -80,9 +108,12 @@ public class QuizSession {
 	 *          when submitting a quiz answer.
 	 */
 	public void addNewResponses(HttpServletRequest req) {
-		// TODO: iterate through the POST parameters returned by getParameterMap,
-		// seeing if they already exist in responseParams. If any new parameters are
-		// seen, add them to responseParams.
+		for (Enumeration<String> e = req.getParameterNames(); e.hasMoreElements();) {
+			String newParam = e.nextElement();
+			if (!responseParams.containsKey(newParam)) {
+				responseParams.put(newParam, req.getParameter(newParam));
+			}
+		}
 	}
 
 	/**
@@ -91,8 +122,7 @@ public class QuizSession {
 	 * @return The quiz being taken.
 	 */
 	public Quiz getQuiz() {
-		// TODO: return the quiz being taken.
-		return null;
+		return quiz;
 	}
 
 	/**
@@ -101,8 +131,7 @@ public class QuizSession {
 	 * @return True if the quiz should be scored.
 	 */
 	public boolean isForScore() {
-		// TODO: return whether this is being taken for a score or not
-		return false;
+		return forScore;
 	}
 
 	/**
@@ -110,11 +139,12 @@ public class QuizSession {
 	 * question can be sent to the user at a time.
 	 * 
 	 * @return The last question presented to the user
+	 * @throws SQLException
+	 *           If the SQL operations fail.
 	 */
-	public Question getLastSeenQuestion() {
-		// TODO: grab the nth question from quiz and return that, where n is the
-		// index stored in lastSeenQuestionIndex.
-		return null;
+	public Question getLastSeenQuestion() throws SQLException {
+		return quiz.getQuestion(randomOrdering == null ? lastSeenQuestionIndex
+				: randomOrdering[lastSeenQuestionIndex]);
 	}
 
 	/**
@@ -122,13 +152,27 @@ public class QuizSession {
 	 * 
 	 * @return The next question to be presented to the user or null if no more
 	 *         questions exist.
+	 * @throws SQLException
+	 *           If the SQL operations fail.
 	 */
-	public Question advanceQuestion() {
-		// TODO: increment n and then grab the nth question from quiz and return
-		// that, where n is the index stored in lastSeenQuestionIndex. If n is the
-		// last question, return
-		// null.
-		return null;
+	public Question advanceQuestion() throws SQLException {
+		lastSeenQuestionIndex++;
+		return quiz.getQuestion(randomOrdering == null ? lastSeenQuestionIndex
+				: randomOrdering[lastSeenQuestionIndex]);
+	}
+
+	/**
+	 * Gets the nth seen question.
+	 * 
+	 * @param index
+	 *          The index of the question requested.
+	 * @return The nth question presented to the user.
+	 * @throws SQLException
+	 *           If the SQL operations fail.
+	 */
+	public Question getNthSeenQuestion(int index) throws SQLException {
+		return quiz.getQuestion(randomOrdering == null ? index
+				: randomOrdering[index]);
 	}
 
 	/**
@@ -136,13 +180,24 @@ public class QuizSession {
 	 * HistoryEntry row to the SQL database for this QuizSession.
 	 */
 	public History finishQuiz() throws SQLException {
-		// TODO: set the time ended to the current time using new Date(). If the
-		// test was taken for a score, calculate the time taken by taking a
-		// difference between the time ended and time started and create a History
-		// object with the appropriate data. At the same time, add an entry into the
-		// SQL table in HistoryEntry to reflect this test attempt.
-
-		return null;
+		Date timeFinished = new Date();
+		Date timeTaken = new Date(timeFinished.getTime() - timeStarted.getTime());
+		int score = 0;
+		int totalQuestions = quiz.getTotalQuestions();
+		for (int i = 0; i < totalQuestions; i++) {
+			score += getNthSeenQuestion(i).getCorrectPoints(this);
+		}
+		History result = new History(acc.getId(), quiz.getId(), score, timeStarted,
+				timeTaken);
+		if (forScore) {
+			Statement s = SQL.getStatement();
+			s.executeUpdate(String.format("INSERT INTO HistoryEntries "
+					+ "(UserID, QuizID, Score, TimeBegun, TimeTaken) VALUES "
+					+ "(%d, %d, %d, %s, %s);", acc.getId(), quiz.getId(), score,
+					SQL.convertDateToSQLDate(timeStarted),
+					SQL.convertDateToSQLTime(timeTaken)));
+			s.close();
+		}
+		return result;
 	}
-
 }

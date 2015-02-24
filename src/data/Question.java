@@ -2,7 +2,6 @@ package data;
 
 import helpers.SubclassFinder;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,7 +9,7 @@ import java.sql.Statement;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 
 import sql.SQL;
 
@@ -24,6 +23,8 @@ import sql.SQL;
  *
  */
 public abstract class Question {
+	// Stores the ID of the question locally.
+	protected int id;
 
 	/**
 	 * Custom exception to indicate that a given representation of a Question
@@ -50,7 +51,7 @@ public abstract class Question {
 	 * question.
 	 * 
 	 * @param xmlNode
-	 *          Any valid XML Node that for sure has a supported question.
+	 *          Any valid XML Element that for sure has a supported question.
 	 * @return The parsed Question.
 	 * @throws SQLException
 	 *           If the SQL operations fail.
@@ -58,7 +59,7 @@ public abstract class Question {
 	 *           If none of the subtypes were able to parse the xmlNode.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Question loadQuestion(Node xmlNode) throws SQLException,
+	public static Question loadQuestion(Element xmlNode) throws SQLException,
 			LoadException {
 		// Searches through all subtypes of Question and tries to parse the question
 		// as if it were that subtype.
@@ -93,7 +94,6 @@ public abstract class Question {
 	 * @throws LoadException
 	 *           If none of the tables contained this ID.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Question loadQuestion(int id) throws SQLException,
 			LoadException {
 		Statement s = SQL.getStatement();
@@ -122,15 +122,17 @@ public abstract class Question {
 	 * @throws LoadException
 	 *           If none of the tables contained this ID.
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Question loadQuestionFromSQLRow(ResultSet rs)
 			throws SQLException, LoadException {
 		int qType = rs.getInt("QuestionType");
-		String data = rs.getString("QuestionType");
+		String data = rs.getString("Question");
 		for (Class c : SubclassFinder.findSubclasses(Question.class)) {
 			try {
 				int questionType = (int) c.getMethod("getQuestionTypeId").invoke(null);
 				if (questionType == qType) {
 					Question result = (Question) c.getConstructor().newInstance();
+					result.id = rs.getInt("ID");
 					result.loadQuestionFromDB(data);
 					return result;
 				}
@@ -163,6 +165,80 @@ public abstract class Question {
 	 */
 	public static String getQuestionTypeTag() {
 		return null;
+	}
+
+	/**
+	 * Generates the HTML form to present to users wishing to add a question to a
+	 * quiz. Because the UI for creating different types of questions will clearly
+	 * be different, each question type should implement this method to generate
+	 * the appropriate UI. Unline the AnswerArea HTML, this div can contain the
+	 * form tags, as we can enforce that only one question can be added at a time
+	 * on the add question page. All question types should override this method.
+	 * 
+	 * @return The HTML string containing a div with form input elements to show
+	 *         the user a custom interface for creating certain questions.
+	 */
+	public static String generateCreateQuestionHtml() {
+		return null;
+	}
+
+	/**
+	 * Handles a request to create a question once a user submits a form generated
+	 * by generateCreateQuestionHtml.
+	 * 
+	 * @param req
+	 *          The HttpServletRequest given to the create questions Servlet.
+	 * @return The newly created question.
+	 * @throws SQLException
+	 *           If the SQL operations fail.
+	 */
+	public static Question createQuestion(HttpServletRequest req)
+			throws SQLException {
+		return null;
+	}
+
+	/**
+	 * Retrieves the text representation of the data of a question. Only
+	 * accessible to Question classes.
+	 * 
+	 * @return The text representation of the question.
+	 */
+	protected abstract String toDataString();
+
+	/**
+	 * Appends a Question object that is not yet in the SQL database to a quiz.
+	 * 
+	 * @param q
+	 * @throws SQLException
+	 */
+	public void addQuestionToQuiz(Quiz q) throws SQLException {
+		Statement s = SQL.getStatement();
+		int questionType = -1;
+		try {
+			questionType = (int) this.getClass().getMethod("getQuestionTypeId")
+					.invoke(null);
+		} catch (Exception e) {
+			System.err.println("Class [" + this.getClass().getName()
+					+ "] did not implement getQuestionTypeId.");
+			System.exit(-1);
+		}
+		s.executeUpdate(String.format(
+				"INSERT INTO Questions (QuizID, QuestionType, "
+						+ "QuestionNumber, Question) VALUES (%d, %d, %d, '%s');",
+				q.getId(), questionType, q.getTotalQuestions(), toDataString()));
+		ResultSet rs = s
+				.executeQuery("SELECT * FROM Questions WHERE ID = LAST_INSERT_ID();");
+		rs.next();
+		id = rs.getInt("ID");
+	}
+
+	/**
+	 * Public getter for question ID.
+	 * 
+	 * @return id;
+	 */
+	public int getQuestionId() {
+		return id;
 	}
 
 	/**
@@ -264,46 +340,16 @@ public abstract class Question {
 			throws SQLException;
 
 	/**
-	 * Generates the HTML form to present to users wishing to add a question to a
-	 * quiz. Because the UI for creating different types of questions will clearly
-	 * be different, each question type should implement this method to generate
-	 * the appropriate UI. Unline the AnswerArea HTML, this div can contain the
-	 * form tags, as we can enforce that only one question can be added at a time
-	 * on the add question page.
-	 * 
-	 * @return The HTML string containing a div with a form to show the user a
-	 *         custom interface for creating certain questions.
-	 */
-	public abstract String generateCreateQuestionHtml();
-
-	/**
-	 * Handles a request to create a question once a user submits a form generated
-	 * by generateCreateQuestionHtml. Before creating questions, make sure to
-	 * check that the logged in user is the creator of the quiz.
-	 * 
-	 * @param req
-	 *          The HttpServletRequest given to the create questions Servlet.
-	 * @return The newly created question.
-	 * @throws SQLException
-	 *           If the SQL operations fail.
-	 */
-	public abstract Question createQuestion(HttpServletRequest req)
-			throws SQLException;
-
-	/**
-	 * Attempts to parse an XML representation of the question, populating any
-	 * relevant instance variables and writing to the SQL table if successfully
-	 * parsed. Only if the node is entirely properly parsed should writes be made
-	 * to the SQL tables.
+	 * Attempts to parse an XML representation of the question.
 	 * 
 	 * @param xmlNode
-	 *          The Node containing the entire question.
+	 *          The Element containing the entire question.
 	 * @throws LoadException
 	 *           If the XML cannot be properly parsed fully.
 	 * @throws SQLException
 	 *           If the SQL operations fail.
 	 */
-	protected abstract void parseFromXml(Node xmlNode) throws LoadException,
+	protected abstract void parseFromXml(Element xmlNode) throws LoadException,
 			SQLException;
 
 	/**

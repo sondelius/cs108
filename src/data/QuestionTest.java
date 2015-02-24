@@ -17,7 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 
 import sql.SQL;
 
@@ -71,15 +71,11 @@ public class QuestionTest {
 		public void changeQuestion(HttpServletRequest req) throws SQLException {
 		}
 
-		public String generateCreateQuestionHtml() {
+		public static String generateCreateQuestionHtml() {
 			return null;
 		}
 
-		public Question createQuestion(HttpServletRequest req) throws SQLException {
-			return null;
-		}
-
-		protected void parseFromXml(Node xmlNode) throws LoadException,
+		protected void parseFromXml(Element xmlNode) throws LoadException,
 				SQLException {
 			// Signify the parsing happened
 			xmlCalled = true;
@@ -88,6 +84,11 @@ public class QuestionTest {
 		protected void loadQuestionFromDB(String data) throws LoadException {
 			// Signify the loading happened
 			loadCalled = true;
+		}
+
+		@Override
+		public String toDataString() {
+			return null;
 		}
 	}
 
@@ -106,7 +107,8 @@ public class QuestionTest {
 			InputStream stream = new ByteArrayInputStream(
 					xmlString.getBytes(StandardCharsets.UTF_8));
 			Document d = builder.parse(stream);
-			Node n = d.getElementsByTagName("dummyquestion").item(0);
+			d.getDocumentElement().normalize();
+			Element n = (Element) d.getElementsByTagName("dummyquestion").item(0);
 			// See that the static loading worked
 			DummyQuestion q = (DummyQuestion) Question.loadQuestion(n);
 			assertTrue(q.xmlCalled);
