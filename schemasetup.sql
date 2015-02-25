@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS Questions;
 DROP TABLE IF EXISTS Quizzes;
 DROP TABLE IF EXISTS Accounts;
 DROP TABLE IF EXISTS Categories;
+DROP TABLE IF EXISTS Announcements;
 
 -- Create fresh tables
 
@@ -243,5 +244,13 @@ CREATE TABLE Reports (
 	FOREIGN KEY (UserID) REFERENCES Accounts(ID),
 	-- An optional nullable reason that explains the report.
 	Reason VARCHAR(2000)
+);
+
+-- Represents all admin announcements.
+CREATE TABLE Announcements (
+  -- The message of the announcement.
+  Message VARCHAR(2000),
+  -- When the announcement was made on.
+  WrittenOn DATETIME NOT NULL
 );
 	
