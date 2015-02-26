@@ -1,9 +1,7 @@
 package helpers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 public class SubclassFinderTest {
@@ -18,6 +16,7 @@ public class SubclassFinderTest {
 	private static class MySubClass2 extends MySubClass1 {
 	}
 
+	@SuppressWarnings("unused")
 	private static class MySubClass3 extends MySubClass2 {
 	}
 
@@ -25,6 +24,7 @@ public class SubclassFinderTest {
 	 * Tests the ability to find that the subclasses of MyBaseClass are MySubClass
 	 * 1 2 and 3.
 	 */
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void test() {
 		boolean containsSub1 = false, containsSub2 = false, containsSub3 = false;
