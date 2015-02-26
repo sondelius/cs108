@@ -1,6 +1,7 @@
 package helpers;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -23,8 +24,10 @@ public class SubclassFinder {
 		// Looks through the package for class files and checks for if they are
 		// subclasses of the provided class.
 		String packagePath = "/" + c.getPackage().getName().replace(".", "/");
-		File packageDir = new File(SubclassFinder.class.getResource(packagePath)
-				.getFile());
+		URL packageURL = SubclassFinder.class.getResource(packagePath);
+		String path = packageURL.getPath();
+		path = path.replace("%20", " ");
+		File packageDir = new File(path);
 		if (packageDir.exists()) {
 			for (String file : packageDir.list()) {
 				if (file.endsWith(".class")) {
