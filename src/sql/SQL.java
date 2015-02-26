@@ -95,11 +95,11 @@ public class SQL {
 	}
 
 	/**
-	 * Converts a Java Date into a string representation of an MySQL TIME.
+	 * Converts a MySQL TIME string to a Java Date.
 	 * 
 	 * @param d
-	 *          The date (time elapsed) to convert.
-	 * @return The string representation of a MySQL TIME.
+	 *          The string representation of a MySQL TIME (time elapsed).
+	 * @return The Java Date representing the value.
 	 */
 	public static Date convertSQLTimeToDate(String sqlTime) {
 		try {
