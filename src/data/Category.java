@@ -1,7 +1,11 @@
 package data;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+
+import sql.SQL;
 
 /**
  * Containers for data in the Categories table.
@@ -20,10 +24,15 @@ public class Category {
 	 *           If the SQL operations fail.
 	 */
 	public static Category getCategory(String exactName) throws SQLException {
-		// TODO: Create an SQL query to find all entries in the Category table that
-		// contain the fragment and then convert those entries into Category objects
-		// by invoking the private constructior.
-		return null;
+		Statement s = SQL.getStatement();
+		ResultSet rs = s.executeQuery(String.format(
+				"SELECT * FROM Categories WHERE CategoryName = '%s';", exactName));
+		Category result = null;
+		if (rs.next()) {
+			result = new Category(rs.getString("CategoryName"), rs.getInt("ID"));
+		}
+		s.close();
+		return result;
 	}
 
 	/**
@@ -37,10 +46,16 @@ public class Category {
 	 */
 	public static ArrayList<Category> getCategories(String fragment)
 			throws SQLException {
-		// TODO: Create an SQL query to find all entries in the Category table that
-		// contain the fragment and then convert those entries into Category objects
-		// by invoking the private constructior.
-		return null;
+		Statement s = SQL.getStatement();
+		ResultSet rs = s.executeQuery(String.format(
+				"SELECT * FROM Categories WHERE CategoryName LIKE '%s';", "%"
+						+ fragment + "%"));
+		ArrayList<Category> result = new ArrayList<Category>();
+		while (rs.next()) {
+			result.add(new Category(rs.getString("CategoryName"), rs.getInt("ID")));
+		}
+		s.close();
+		return result;
 	}
 
 	/**
@@ -55,11 +70,44 @@ public class Category {
 	 */
 	public static Category getOrCreateNewCategory(String name)
 			throws SQLException {
-		// TODO: Check for existence; if it exists in Categories table, convert the
-		// entry into a new Category object using the private constructor and return
-		// it. Otherwise, insert a new entry for the newly desired category and
-		// construct a Category object to represent that.
-		return null;
+		Category c = getCategory(name);
+		if (c == null) {
+			// Create new category
+			Statement s = SQL.getStatement();
+			s.executeUpdate(String.format(
+					"INSERT INTO Categories (CategoryName) VALUES ('%s');", name));
+			ResultSet rs = s.executeQuery("SELECT LAST_INSERT_ID() FROM Categories;");
+			rs.next();
+			c = new Category(name, rs.getInt(1));
+			s.close();
+		}
+		return c;
+	}
+
+	/**
+	 * Gets a list of categories by popularity, with a limit to the number to
+	 * retrieve.
+	 * 
+	 * @param limit
+	 *          The upper limit on the number of categories to get; use -1 to
+	 *          signify no limit.
+	 * @return An ArrayList of categories.
+	 * @throws SQLException
+	 *           If the SQL operations fail.
+	 */
+	public static ArrayList<Category> getCategories(int limit)
+			throws SQLException {
+		Statement s = SQL.getStatement();
+		ResultSet rs = s
+				.executeQuery(String
+						.format("SELECT CategoryName FROM Quizzes LEFT JOIN Categories ON Quizzes.CategoryID = Categories.ID"
+								+ (limit == -1 ? "" : (" LIMIT " + limit)) + ";"));
+		ArrayList<Category> result = new ArrayList<Category>();
+		while (rs.next()) {
+			result.add(new Category(rs.getString("CategoryName"), rs.getInt("ID")));
+		}
+		s.close();
+		return result;
 	}
 
 	private String name;
