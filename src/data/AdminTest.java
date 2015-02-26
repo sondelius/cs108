@@ -131,6 +131,9 @@ public class AdminTest {
 		}
 	}
 
+	/**
+	 * Creates and clears history for a quiz.
+	 */
 	@Test
 	public void testClearQuizHistory() {
 		try {
