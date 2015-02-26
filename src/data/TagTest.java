@@ -66,7 +66,6 @@ public class TagTest {
 			Tag t2 = Tag.getTag(tagName);
 			assertEquals(t.getId(), t2.getId());
 			// Create another tag with similar name
-			// Add another tag with a similar name
 			Tag t3 = Tag.getOrCreateNewTag("stTag" + System.currentTimeMillis());
 			// Search for all tags containing a fragment (should get both)
 			ArrayList<Tag> similarTags = Tag.getTags("stTag");
